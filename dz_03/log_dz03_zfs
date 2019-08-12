@@ -1,0 +1,185 @@
+root@lvm vagrant]# lsblk
+NAME                    MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT
+sda                       8:0    0   40G  0 disk
+├─sda1                    8:1    0    1M  0 part
+├─sda2                    8:2    0    1G  0 part /boot
+└─sda3                    8:3    0   39G  0 part
+  ├─VolGroup00-LogVol00 253:0    0 37.5G  0 lvm  /
+  └─VolGroup00-LogVol01 253:1    0  1.5G  0 lvm  [SWAP]
+sdb                       8:16   0   10G  0 disk
+sdc                       8:32   0    2G  0 disk
+sdd                       8:48   0    1G  0 disk
+sde                       8:64   0    1G  0 disk
+
+
+[root@lvm vagrant]# yum install http://download.zfsonlinux.org/epel/zfs-release.el7_6.noarch.rpm
+
+
+[root@lvm vagrant]# vi /etc/yum.repos.d/zfs.repo
+[zfs]
+name=ZFS on Linux for EL7 - dkms
+baseurl=http://download.zfsonlinux.org/epel/7.6/$basearch/
+enabled=0
+metadata_expire=7d
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-zfsonlinux
+[zfs-kmod]
+name=ZFS on Linux for EL7 - kmod
+baseurl=http://download.zfsonlinux.org/epel/7.6/kmod/$basearch/
+enabled=1
+metadata_expire=7d
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-zfsonlinux
+
+
+[root@lvm vagrant]# yum install zfs
+
+
+[root@lvm vagrant]# lsmod | grep zfs
+zfs                  3564425  3
+zunicode              331170  1 zfs
+zavl                   15236  1 zfs
+icp                   270148  1 zfs
+zcommon                73440  1 zfs
+znvpair                89131  2 zfs,zcommon
+spl                   102412  4 icp,zfs,zcommon,znvpair
+
+
+[root@lvm vagrant]# zpool create test_cache sdb cache sdc
+
+
+[root@lvm vagrant]# zpool list
+NAME         SIZE  ALLOC   FREE  EXPANDSZ   FRAG    CAP  DEDUP  HEALTH  ALTROOT
+test_cache  9.94G   150K  9.94G         -     0%     0%  1.00x  ONLINE  -
+[root@lvm vagrant]# zpool status
+  pool: test_cache
+ state: ONLINE
+  scan: none requested
+config:
+
+	NAME        STATE     READ WRITE CKSUM
+	test_cache  ONLINE       0     0     0
+	  sdb       ONLINE       0     0     0
+	cache
+	  sdc       ONLINE       0     0     0
+
+errors: No known data errors
+
+
+[root@lvm vagrant]# mount | grep test
+test_cache on /test_cache type zfs (rw,seclabel,xattr,noacl)
+
+
+[root@lvm vagrant]# zpool status
+  pool: test_cache
+ state: ONLINE
+  scan: none requested
+config:
+
+	NAME        STATE     READ WRITE CKSUM
+	test_cache  ONLINE       0     0     0
+	  sdb       ONLINE       0     0     0
+	cache
+	  sdc       ONLINE       0     0     0
+
+errors: No known data errors
+
+  pool: zfs_opt
+ state: ONLINE
+  scan: none requested
+config:
+
+	NAME        STATE     READ WRITE CKSUM
+	zfs_opt     ONLINE       0     0     0
+	  mirror-0  ONLINE       0     0     0
+	    sdd     ONLINE       0     0     0
+	    sde     ONLINE       0     0     0
+
+errors: No known data errors
+
+
+[root@lvm vagrant]# zfs create zfs_opt/opt
+
+
+[root@lvm vagrant]# cp -aR /opt/* /zfs_opt/opt/
+
+
+[root@lvm vagrant]# ls /zfs_opt/opt/
+1  2  3  VBoxGuestAdditions-6.0.2
+
+
+[root@lvm vagrant]# rm -rf /opt/*
+
+
+[root@lvm vagrant]# zfs set mountpoint=/opt zfs_opt/opt
+
+
+[root@lvm vagrant]# mount | grep opt
+zfs_opt on /zfs_opt type zfs (rw,seclabel,xattr,noacl)
+zfs_opt/opt on /opt type zfs (rw,seclabel,xattr,noacl)
+
+
+[root@lvm vagrant]# ls -la /opt/
+total 5
+drwxr-xr-x.  3 root root   6 Aug 12 15:31 .
+dr-xr-xr-x. 20 root root 272 Aug 12 15:28 ..
+-rw-r--r--.  1 root root   0 Aug 12 12:02 1
+-rw-r--r--.  1 root root   0 Aug 12 12:02 2
+-rw-r--r--.  1 root root   0 Aug 12 12:02 3
+drwxr-xr-x.  9 root root  12 Aug 12 11:58 VBoxGuestAdditions-6.0.2
+
+
+[root@lvm vagrant]# zfs snapshot zfs_opt/opt@opt_snap
+
+
+[root@lvm vagrant]# zfs list -t snapshot
+NAME                   USED  AVAIL  REFER  MOUNTPOINT
+zfs_opt/opt@opt_snap     0B      -  23.6M  -
+
+
+[root@lvm vagrant]# rm -f /opt/{1,2}
+[root@lvm vagrant]# ls -la /opt/
+total 4
+drwxr-xr-x.  3 root root   4 Aug 12 15:42 .
+dr-xr-xr-x. 20 root root 272 Aug 12 15:28 ..
+-rw-r--r--.  1 root root   0 Aug 12 12:02 3
+drwxr-xr-x.  9 root root  12 Aug 12 11:58 VBoxGuestAdditions-6.0.2
+
+[root@lvm vagrant]# zfs rollback zfs_opt/opt@opt_snap
+[root@lvm vagrant]# ls -la /opt/
+total 5
+drwxr-xr-x.  3 root root   6 Aug 12 15:34 .
+dr-xr-xr-x. 20 root root 272 Aug 12 15:28 ..
+-rw-r--r--.  1 root root   0 Aug 12 12:02 1
+-rw-r--r--.  1 root root   0 Aug 12 12:02 2
+-rw-r--r--.  1 root root   0 Aug 12 12:02 3
+drwxr-xr-x.  9 root root  12 Aug 12 11:58 VBoxGuestAdditions-6.0.2
+
+
+[root@lvm vagrant]# dd if=/dev/zero of=/opt/test bs=1M count=300 status=progress
+313524224 bytes (314 MB) copied, 17.616052 s, 17.8 MB/s
+300+0 records in
+300+0 records out
+314572800 bytes (315 MB) copied, 17.6164 s, 17.9 MB/s
+
+[root@lvm vagrant]# du -sh /opt/
+324M	/opt/
+
+
+[root@lvm vagrant]# zfs list
+NAME          USED  AVAIL  REFER  MOUNTPOINT
+test_cache    129K  9.63G    24K  /test_cache
+zfs_opt       324M   556M    24K  /zfs_opt
+zfs_opt/opt   324M   556M   324M  /opt
+
+
+[root@lvm vagrant]# zpool list
+NAME         SIZE  ALLOC   FREE  EXPANDSZ   FRAG    CAP  DEDUP  HEALTH  ALTROOT
+test_cache  9.94G   150K  9.94G         -     0%     0%  1.00x  ONLINE  -
+zfs_opt     1008M   324M   684M         -     9%    32%  1.00x  ONLINE  -
+
+
+[root@lvm vagrant]# mount | grep zfs
+test_cache on /test_cache type zfs (rw,seclabel,xattr,noacl)
+zfs_opt on /zfs_opt type zfs (rw,seclabel,xattr,noacl)
+zfs_opt/opt on /opt type zfs (rw,seclabel,xattr,noacl)
