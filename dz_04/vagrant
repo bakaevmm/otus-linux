@@ -1,0 +1,3 @@
+*/1 * * * * cd /vagrant && ./log_maker.sh
+*/5 * * * * cd /vagrant && ./log_analyzer.sh
+
