@@ -33,3 +33,18 @@
 4. Выполним chroot в /sysroot  
 5. Отключаем selinux в конфиг файле /etc/selinux/config.  
 6. Меняем пароль root и перезагружаемся.  
+
+
+## Переименовываем vg раздел и загружаемся в систему. 
+
+Во вложении файл [log_vg_rename](log_vg_rename) с записью консоли при выполнении работ. 
+
+## Создаём свой module в initrd 
+
+
+1. Создаём директорию с файлами модуля ```mkdir /usr/lib/dracut/modules.d/01test```.  
+2. Помещаем туда два скрипта [module-setup.sh](module-setup.sh) [test.sh](test.sh) и делаем файлы исполняемыми.  
+3. Пересобираем образ initrd ```mkinitrd -f -v /boot/initramfs-$(uname -r).img $(uname -r)```.  
+4. Изменяем конфигурацию grub ```/etc/default/grub``` отключая опции ```rghb quiet```.  
+5. Пересобираем grub ```grub2-mkconfig -o /boot/grub2/grub.cfg```.  
+6. При следующей загрузки видим результат работы модуля.  
