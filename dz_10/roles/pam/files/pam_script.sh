@@ -1,5 +1,9 @@
 #!/bin/bash
 
+if id -Gn $PAM_USER | grep -w vagrant >/dev/null; then
+  exit 0
+fi
+
 if id -Gn $PAM_USER | grep -w admin >/dev/null; then
   exit 0
 fi
