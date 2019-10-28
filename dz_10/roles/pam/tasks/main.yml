@@ -1,0 +1,46 @@
+---
+# tasks file for pam
+- name: Создаём группу admin
+  group:
+    name: admin
+    state: present
+
+- name: Создаём пользователя без группы admin
+  user:
+    name: noadmin
+    password: "{{ password | password_hash('sha512') }}"
+    state: present
+
+- name: Создаём пользователя в группе admin
+  user:
+    name: admin
+    group: admin
+    password: "{{ password | password_hash('sha512') }}"
+    state: present
+
+- name: Копируем на сервер скрипт проверки
+  copy:
+    src: pam_script.sh
+    dest: /bin/pam_script.sh
+    mode: '0755'
+
+- name: Добавляем правило проверки по скрипту
+  pamd:
+    name: sshd
+    type: account
+    control: required
+    module_path: pam_nologin.so
+    new_type: account
+    new_control: required
+    new_module_path: pam_exec.so
+    module_arguments: /bin/pam_script.sh
+    state: after
+
+- name: Добавляем пользователю adm парва на выполнение sudo без пароля
+  copy:
+    src:  adm_user
+    dest: /etc/sudoers.d/admin
+    owner: root
+    group: root
+    mode: '0440'
+    validate: visudo -cf %s

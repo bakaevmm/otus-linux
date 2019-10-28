@@ -1,0 +1,6 @@
+---
+- name: test pam modules
+  hosts: all
+  become: true
+  roles:
+    - pam
