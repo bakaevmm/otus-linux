@@ -1,0 +1,4 @@
+---
+- include: start.yaml
+- include: server.yaml
+- include: client.yaml

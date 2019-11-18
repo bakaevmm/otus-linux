@@ -1,0 +1,27 @@
+---
+- hosts:
+   - all
+  become: true
+  tasks:
+  - name: selinux disable 
+    selinux:
+      state: disabled
+  
+  - name: selinux polycy disable
+    selinux:
+      policy: targeted
+      state: permissive
+
+  - name: install packeges
+    yum:
+     name:
+      - epel-release
+      - vim
+      - mc
+     state: present
+  
+  - name: disable firewall
+    systemd: 
+      name: firewalld
+      state: stopped
+      enabled: no

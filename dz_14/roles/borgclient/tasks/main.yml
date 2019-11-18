@@ -1,0 +1,62 @@
+---
+# tasks file for borgclient
+  - name: install borg
+    get_url:
+      url: https://github.com/borgbackup/borg/releases/download/1.1.10/borg-linux64
+      dest: /usr/bin/borg
+      owner: root
+      group: root
+      mode: "0777"
+
+  - name: create backupuser
+    user: 
+      name: borg
+
+  - name: Set authorized key taken from file
+    authorized_key:
+      user: borg
+      state: present
+      key: "{{ item }}"
+    with_file:
+      - id_rsa.pub
+
+  - name: copy private key
+    copy:
+      src: id_rsa
+      dest: /home/borg/.ssh/
+      owner: borg
+      group: borg
+      mode: "0600"
+
+  - name: copy root privatekey
+    copy:
+      src: id_rsa
+      dest: /root/.ssh/
+      group: root
+      owner: root
+      mode: '600'
+
+  - name: add hosts
+    lineinfile:
+      path: /etc/hosts
+      line: "{{ item }}"
+    with_items:
+      - '192.168.11.160 borgclient'
+      - '192.168.11.150 borgserver'
+
+  - name: ssh know_host
+    blockinfile:
+      path: /etc/ssh/ssh_config
+      block: |
+            StrictHostKeyChecking no
+            UserKnownHostsFile=/dev/null
+
+  - name: init borg repo from server
+    shell: "borg init -e none borg@borgserver:backup_etc"
+
+  - name: add cron task
+    cron:
+      name: "backup_etc"
+      minute: "*/2"
+      job: "borg create --stats --list borg@borgserver:backup_etc::\"etc-$(date)\" /etc"
+      user: root

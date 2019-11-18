@@ -1,0 +1,6 @@
+---
+- name: borg server install
+  hosts: server
+  become: true
+  roles:
+    - borgserver

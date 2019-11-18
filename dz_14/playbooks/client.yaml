@@ -1,0 +1,6 @@
+---
+- name: borg client install
+  hosts: client
+  become: true
+  roles:
+    - borgclient
