@@ -8,7 +8,7 @@
 ### Описание запуска для проверки ДЗ:
 Собранные img доступны по ссылкам:  
 
-[Кастомый nginx] https://hub.docker.com/repository/docker/bakaevmm/otus-nginx  
+[Кастомый nginx] https://hub.docker.com/r/bakaevmm/otus-nginx   
   
-[Кастомный php] https://hub.docker.com/repository/docker/bakaevmm/otus-php  
-[Nginx для php] https://hub.docker.com/repository/docker/bakaevmm/otus-nginx-php  
+[Кастомный php] https://hub.docker.com/r/bakaevmm/otus-php  
+[Nginx для php] https://hub.docker.com/r/bakaevmm/otus-nginx-php  
