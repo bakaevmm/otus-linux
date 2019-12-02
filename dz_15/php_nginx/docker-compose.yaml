@@ -1,0 +1,8 @@
+version: '3.7'
+services:
+  nginx: 
+    image: bakaevmm/otus-nginx-php
+    ports:
+      - "8080:80"
+  php:
+    image: bakaevmm/otus-php
