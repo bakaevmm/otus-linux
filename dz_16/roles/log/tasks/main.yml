@@ -1,0 +1,50 @@
+---
+# tasks file for log
+- name: install elastic rpm key
+  rpm_key:
+    state: present
+    key: https://packages.elastic.co/GPG-KEY-elasticsearch
+
+- name: install elastic repo
+  copy:
+    src: elastic.repo
+    dest: /etc/yum.repos.d/elastic.repo
+    owner: root
+    mode: 0644
+
+- name: install elk
+  yum:
+    name: "{{ packages }}"
+    state: present
+  vars:
+    packages:
+      - java
+      - elasticsearch
+      - logstash
+      - kibana
+
+- name: copy kibana config
+  copy:
+    src: files/kibana/kibana.yml
+    dest: /etc/kibana/kibana.yml 
+  notify: kibana_restart
+
+- name: copy logstash config
+  copy:
+    src: "files/logstash/{{ item }}"
+    dest: "/etc/logstash/conf.d/{{ item }}"
+  with_items:
+    - 01-input-web.conf
+    - 21-output-web.conf
+  notify: logstash_restart
+
+- name: start and enabled elk
+  service: 
+    name: "{{ item }}"
+    state: started
+    enabled: yes
+  with_items:
+      - elasticsearch
+      - logstash
+      - kibana
+

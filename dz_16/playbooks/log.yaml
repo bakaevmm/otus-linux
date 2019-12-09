@@ -1,0 +1,6 @@
+---
+- hosts:
+    - log
+  become: true
+  roles:
+    - log

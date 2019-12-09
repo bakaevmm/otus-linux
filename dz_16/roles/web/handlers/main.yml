@@ -1,0 +1,11 @@
+---
+# handlers file for web
+- name: filebeat_restart
+  service:
+    name: filebeat
+    state: restarted
+
+- name: auditd_restart
+  service:
+    name: filebeat
+    state: restarted

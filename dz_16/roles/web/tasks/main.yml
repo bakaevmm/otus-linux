@@ -1,0 +1,51 @@
+---
+# tasks file for web
+
+- name: install elastic rpm key
+  rpm_key:
+    state: present
+    key: https://packages.elastic.co/GPG-KEY-elasticsearch
+
+- name: install elastic repo
+  copy:
+    src: elastic.repo
+    dest: /etc/yum.repos.d/elastic.repo
+    owner: root
+    mode: 0644
+
+- name: install nginx and filebeat
+  yum:
+    name: "{{ packages }}"
+    state: present
+  vars:
+    packages:
+      - nginx
+      - filebeat
+
+- name: copy filebeat config
+  copy:
+    src: files/filebeat.yml
+    dest: /etc/filebeat/filebeat.yml
+  notify: filebeat_restart
+
+- name: copy ayditd nginx rule 
+  copy:
+    src: files/audit.rules
+    dest: /etc/audit/rules.d/nginx.rules
+  notify: auditd_restart
+
+- name: start and enabled nginx and filebeat
+  service: 
+    name: "{{ item }}"
+    state: started
+    enabled: yes
+  with_items:
+    - nginx
+    - filebeat
+
+- name: crontab generate bginx log
+  cron:
+    name: "check dirs"
+    minute: "*/1"
+    job: "curl -s http://localhost"
+  

@@ -1,0 +1,21 @@
+tail_files: true
+  
+filebeat.inputs:
+  - type: log
+    tags: 
+      - nginx-web
+    paths:
+      - "/var/log/nginx/access.log"
+
+  - type: log
+    tags: 
+    - audit-web
+    paths:
+      - "/var/log/audit/audit.log"
+  
+  
+output:
+  logstash:
+    hosts: ["log:14201"]
+    timeout: 120
+  

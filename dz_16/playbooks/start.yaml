@@ -1,0 +1,42 @@
+---
+- hosts:
+   - all
+  become: true
+  tasks:
+  - name: selinux disable 
+    selinux:
+      state: disabled
+  
+  - name: selinux polycy disable
+    selinux:
+      policy: targeted
+      state: permissive
+  
+  - name: install epel repo
+    yum:
+      name:
+      - epel-release
+
+  - name: install packeges
+    yum:
+     name:
+      - vim
+      - mc
+      - htop
+      - wget
+      - telnet
+     state: present
+  
+  - name: disable firewall
+    systemd: 
+      name: firewalld
+      state: stopped
+      enabled: no
+
+  - name: add hostname in /etc/hosts
+    lineinfile:
+      path: /etc/hosts
+      line: "{{ item }}"
+    with_items:
+     - '192.168.11.150 web'
+     - '192.168.11.160 log'
